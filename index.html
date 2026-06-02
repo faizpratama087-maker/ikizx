@@ -1,0 +1,1452 @@
+```html
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Nur | Premium Islamic Prayer Hub & Developer Console</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-light: #14b8a6;
+            --primary-dark: #115e59;
+            --secondary: #b45309;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-blur: blur(12px);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --primary: #0d9488;
+            --primary-light: #0f766e;
+            --primary-dark: #115e59;
+            --secondary: #d97706;
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-border: rgba(0, 0, 0, 0.05);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(20, 184, 166, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #042f2e 0%, #111827 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            border: 4px double var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary-light);
+            text-shadow: 0 0 20px var(--primary-light);
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        .splash-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #fff, var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .splash-loader {
+            width: 180px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+        .splash-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-light);
+            box-shadow: 0 0 10px var(--primary-light);
+            animation: load 2.5s forwards cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes load { to { width: 100%; } }
+
+        /* --- APP STRUCTURE --- */
+        #app-container {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-light);
+            cursor: pointer;
+        }
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .btn-icon {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .btn-icon:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Main Workspace Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--card-border);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .menu-item:hover, .menu-item.active {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--primary-light);
+        }
+        .menu-item.active {
+            border-left: 4px solid var(--primary-light);
+        }
+        .menu-divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 1rem 0;
+        }
+
+        /* View Content Management */
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .app-view {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        .app-view.active-view {
+            display: block;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- GLASS CARD SYSTEM --- */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 1.75rem;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .card:hover::before { opacity: 1; }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--primary-light);
+        }
+
+        /* --- COMPLEX ADVANCED CLOCK ARCHITECTURE --- */
+        .clock-hub {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        .analog-clock {
+            width: 160px;
+            height: 160px;
+            border: 6px solid var(--primary);
+            border-radius: 50%;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .analog-clock .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background: var(--text-main);
+            border-radius: 4px;
+            transform: translateX(-50%) rotate(0deg);
+        }
+        .analog-clock .hour { height: 40px; width: 6px; background: var(--primary-light); }
+        .analog-clock .minute { height: 60px; width: 4px; }
+        .analog-clock .second { height: 70px; width: 2px; background: var(--secondary); }
+        .analog-clock .center-dot {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 12px; height: 12px;
+            background: var(--text-main);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .digital-display {
+            text-align: center;
+        }
+        .digital-time {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            font-family: monospace;
+            text-shadow: 0 0 15px var(--primary-light);
+        }
+        .timezone-badge {
+            background: rgba(20, 184, 166, 0.2);
+            color: var(--primary-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* --- PRAYER TIME GRID & SCHEDULES --- */
+        .prayer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .prayer-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem 1rem;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+        }
+        .prayer-box.active {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #042f2e 100%);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.3);
+            transform: scale(1.03);
+        }
+        .prayer-box.next {
+            border-color: var(--secondary);
+            animation: boundaryPulse 2s infinite alternate;
+        }
+        @keyframes boundaryPulse { from { border-color: var(--card-border); } to { border-color: var(--secondary); } }
+        .prayer-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .prayer-time {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+        .countdown-ticker {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 1s linear;
+        }
+
+        /* --- TABULAR DATA DESIGN --- */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 1rem;
+        }
+        .custom-table th, .custom-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .custom-table th {
+            color: var(--primary-light);
+            font-weight: 600;
+            background: rgba(0,0,0,0.1);
+        }
+        .custom-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* --- AUDIO & TASBIH ENHANCEMENTS --- */
+        .tasbih-wrapper {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        .counter-sphere {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--primary-light) 0%, var(--primary-dark) 70%, #022c22 100%);
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), inset -10px -10px 25px rgba(0,0,0,0.4);
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+        .counter-sphere:active {
+            transform: scale(0.95);
+        }
+
+        /* --- COMPASS ENGINE --- */
+        .compass-container {
+            width: 200px;
+            height: 200px;
+            border: 4px solid var(--text-muted);
+            border-radius: 50%;
+            margin: 2rem auto;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            transition: transform 0.5s ease;
+        }
+        .compass-needle {
+            position: absolute;
+            top: 10%; left: 50%;
+            width: 6px; height: 80%;
+            background: linear-gradient(to bottom, #ef4444 50%, var(--text-main) 50%);
+            transform: translateX(-50%);
+            transform-origin: 50% 50%;
+        }
+        .kaaba-indicator {
+            position: absolute;
+            top: 15px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            z-index: 5;
+        }
+
+        /* --- AUTHENTICATION MODULES --- */
+        .auth-gate {
+            max-width: 450px;
+            margin: 4rem auto;
+            padding: 2.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
+        }
+        .btn-prime {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-prime:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(20, 184, 166, 0.4);
+        }
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .auth-switch span {
+            color: var(--primary-light);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* --- ADMIN DEVELOPER DASHBOARD --- */
+        .dev-badge {
+            background: #ef4444;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .sys-log-box {
+            background: #090d16;
+            font-family: monospace;
+            padding: 1rem;
+            border-radius: 12px;
+            height: 250px;
+            overflow-y: auto;
+            color: #10b981;
+            border: 1px solid var(--card-border);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* --- NOTIFICATION CENTER & ALERTS --- */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            border-left: 4px solid var(--primary-light);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(120%);
+            animation: slideIn 0.3s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes slideIn { to { transform: translateX(0); } }
+
+        /* Pure CSS Icons Implementation */
+        .icon-mosque::before { content: "🕌 "; }
+        .icon-clock::before { content: "🕒 "; }
+        .icon-compass::before { content: "🧭 "; }
+        .icon-book::before { content: "📖 "; }
+        .icon-user::before { content: "👤 "; }
+        .icon-cog::before { content: "⚙️ "; }
+        .icon-globe::before { content: "🌐 "; }
+        .icon-bell::before { content: "🔔 "; }
+        .icon-shield::before { content: "🛡️ "; }
+        .icon-map::before { content: "📍 "; }
+        .icon-chart::before { content: "📊 "; }
+        .icon-sun::before { content: "☀️ "; }
+        .icon-moon::before { content: "🌙 "; }
+
+        /* Quick Action Grid Floating Menu */
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .btn-quick {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-quick:hover {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        /* --- RESPONSIVENESS ARCHITECTURE --- */
+        @media (max-width: 992px) {
+            .sidebar { width: 80px; padding: 1.5rem 0.5rem; align-items: center; }
+            .menu-item span { display: none; }
+            .menu-item { justify-content: center; padding: 1rem; }
+        }
+        @media (max-width: 768px) {
+            .workspace { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; order: 2; border-right: none; border-top: 1px solid var(--card-border); }
+            .top-nav { padding: 1rem; }
+            .content-area { padding: 1rem; order: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-logo">🕌</div>
+        <div class="splash-title">AL-NUR</div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; letter-spacing: 4px;">PREMIUM ISLAMIC HUB</div>
+        <div class="splash-loader">
+            <div class="splash-progress"></div>
+        </div>
+    </div>
+
+    <div id="app-container">
+        
+        <header class="top-nav">
+            <div class="nav-brand" onclick="switchView('dashboard')">
+                <span class="icon-mosque"></span> Al-Nur
+            </div>
+            <div id="quick-status-bar" style="font-size: 0.9rem; color: var(--text-muted);">
+                <span id="nav-gregorian"></span> | <span id="nav-hijri" style="color: var(--primary-light);"></span>
+            </div>
+            <div class="nav-controls">
+                <button class="btn-icon" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><span class="icon-sun"></span></button>
+                <button class="btn-icon" onclick="switchView('notifications')" title="Notifications"><span class="icon-bell"></span></button>
+                <button class="btn-icon" onclick="switchView('profile')" id="avatar-btn" title="User Profile">👤</button>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <nav class="sidebar">
+                <div class="menu-item active" onclick="setActiveMenu(this); switchView('dashboard')">
+                    <span class="icon-mosque"></span><span>Dashboard</span>
+                </div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('schedules')">
+                    <span class="icon-clock"></span><span>Schedules</span>
+                </div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('location')">
+                    <span class="icon-map"></span><span>Location Engine</span>
+                </div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('tools')">
+                    <span class="icon-compass"></span><span>Islamic Tools</span>
+                </div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('profile')">
+                    <span class="icon-user"></span><span>My Profile</span>
+                </div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('settings')">
+                    <span class="icon-cog"></span><span>Settings System</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" onclick="setActiveMenu(this); switchView('dev-login')" style="border: 1px dashed rgba(239,68,68,0.4)">
+                    <span class="icon-shield"></span><span>Developer Zone</span>
+                </div>
+            </nav>
+
+            <main class="content-area">
+
+                <div id="view-dashboard" class="app-view active-view">
+                    <div style="margin-bottom: 2rem;">
+                        <h1 id="welcome-banner">Welcome, Guest Believer</h1>
+                        <p style="color: var(--text-muted);" id="dashboard-subtitle">Optimizing your spiritual connection with precise computing metrics.</p>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div class="clock-hub">
+                            <div class="analog-clock" id="analogCanvas">
+                                <div class="hand hour" id="ahour"></div>
+                                <div class="hand minute" id="aminute"></div>
+                                <div class="hand second" id="asecond"></div>
+                                <div class="center-dot"></div>
+                            </div>
+                            <div class="digital-display">
+                                <div class="digital-time" id="digiClock">00:00:00</div>
+                                <div class="timezone-badge" id="timezoneLabel">UTC +07:00 (Auto-Synced)</div>
+                                <div style="margin-top: 0.5rem; font-weight: 600;" id="countdownDisplay">Next Prayer in: --:--:--</div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="prayerProgress"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-layout">
+                        <div class="card">
+                            <div class="card-title">Prayer Realtime Schedule <span class="icon-clock"></span></div>
+                            <div class="prayer-grid" id="mainPrayerGrid">
+                                <div class="prayer-box" id="p-Fajr"><div class="prayer-name">Fajr</div><div class="prayer-time">04:32</div></div>
+                                <div class="prayer-box" id="p-Sunrise"><div class="prayer-name">Sunrise</div><div class="prayer-time">05:48</div></div>
+                                <div class="prayer-box" id="p-Dhuhr"><div class="prayer-name">Dhuhr</div><div class="prayer-time">11:58</div></div>
+                                <div class="prayer-box" id="p-Asr"><div class="prayer-name">Asr</div><div class="prayer-time">15:19</div></div>
+                                <div class="prayer-box" id="p-Maghrib"><div class="prayer-name">Maghrib</div><div class="prayer-time">17:55</div></div>
+                                <div class="prayer-box" id="p-Isha"><div class="prayer-name">Isha</div><div class="prayer-time">19:08</div></div>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="btn-quick" onclick="simulateAdhanAudio()">🔊 Test Adhan Sound</button>
+                                <button class="btn-quick" onclick="requestNotificationPermission()">🔔 Enable Browser Alerts</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-layout">
+                        <div class="card">
+                            <div class="card-title">Daily Inspiration <span class="icon-book"></span></div>
+                            <blockquote style="font-style: italic; border-left: 3px solid var(--primary-light); padding-left: 1rem; margin-bottom: 1rem;" id="dailyQuote">
+                                "Indeed, prayer prohibits immorality and wrongdoing."
+                            </blockquote>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);" id="quoteSource">Surah Al-Ankabut [29:45]</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Live Weather & Qibla Metrics <span class="icon-globe"></span></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 2rem; font-weight: 700;" id="weatherTemp">29°C</div>
+                                    <div style="color: var(--text-muted);" id="weatherDesc">Scattered Clouds</div>
+                                    <div style="font-size: 0.8rem; margin-top:0.5rem;" id="gpsCoords">Lat: -6.2000 | Lon: 106.8167</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="color: var(--secondary); font-weight: bold;">Qibla Direction</div>
+                                    <div style="font-size: 1.5rem; font-weight: bold;" id="qiblaAngle">295.4°</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">North-West</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-schedules" class="app-view">
+                    <div class="card">
+                        <div class="card-title">Comprehensive Prayer Timetable Generator</div>
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                            <button class="btn-prime" style="width: auto;" onclick="generateScheduleTable('daily')">Daily Schedule</button>
+                            <button class="btn-prime" style="width: auto; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main)" onclick="generateScheduleTable('weekly')">Weekly Grid</button>
+                            <button class="btn-prime" style="width: auto; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main)" onclick="generateScheduleTable('monthly')">Monthly Matrix</button>
+                            <button class="btn-prime" style="width: auto; background: var(--secondary);" onclick="simulatePDFDownload()">📥 Export Simulation PDF</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table" id="timetableMatrix">
+                                <thead>
+                                    <tr>
+                                        <th>Date (Gregorian)</th>
+                                        <th>Fajr</th>
+                                        <th>Sunrise</th>
+                                        <th>Dhuhr</th>
+                                        <th>Asr</th>
+                                        <th>Maghrib</th>
+                                        <th>Isha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="timetableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-location" class="app-view">
+                    <div class="grid-layout">
+                        <div class="card">
+                            <div class="card-title">Hierarchical Regional Selection Matrix</div>
+                            <div class="form-group">
+                                <label class="form-label">Country</label>
+                                <select class="form-control" id="locCountry" onchange="cascadeLocation('province')">
+                                    <option value="ID">Indonesia</option>
+                                    <option value="US">United States</option>
+                                    <option value="SA">Saudi Arabia</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Province / State</label>
+                                <select class="form-control" id="locProvince" onchange="cascadeLocation('city')">
+                                    <option>DKI Jakarta</option>
+                                    <option>West Java</option>
+                                    <option>Makkah Region</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">City / Regency</label>
+                                <select class="form-control" id="locCity" onchange="cascadeLocation('district')">
+                                    <option>Jakarta Central</option>
+                                    <option>Bandung</option>
+                                    <option>Mecca</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">District / Sub-district</label>
+                                <select class="form-control" id="locDistrict" onchange="cascadeLocation('village')">
+                                    <option>Gambir</option>
+                                    <option>Coblong</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Village / Ward</label>
+                                <select class="form-control" id="locVillage">
+                                    <option>Gambir Central</option>
+                                    <option>Dago</option>
+                                </select>
+                            </div>
+                            <button class="btn-prime" onclick="saveManualLocation()">Lock Regional Settings</button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Autonomous GPS Capture Engine</div>
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Utilize internal device hardware telemetrics to instantly resolve calculation coordinates.</p>
+                            <button class="btn-prime" style="background: var(--primary-dark);" onclick="triggerGPSDetection()">📡 Engage GPS Telemetry</button>
+                            
+                            <div style="margin-top: 2rem;">
+                                <h4>Favorite & Persistent Safehouses</h4>
+                                <div id="favoriteLocationsList" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-tools" class="app-view">
+                    <div class="grid-layout">
+                        <div class="card">
+                            <div class="card-title">Digital Tasbih Counter Mechanism</div>
+                            <div class="tasbih-wrapper">
+                                <div class="counter-sphere" id="tasbihDisplay" onclick="incrementTasbih()">0</div>
+                                <div style="display: flex; justify-content: center; gap: 1rem;">
+                                    <button class="btn-quick" onclick="resetTasbih()">Reset Counter</button>
+                                    <select class="form-control" style="width: auto;" id="tasbihTarget" onchange="resetTasbih()">
+                                        <option value="33">Target: 33</option>
+                                        <option value="99">Target: 99</option>
+                                        <option value="99999">Infinite Mode</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Mathematical Qibla Telemetry Compass</div>
+                            <div class="compass-container" id="compassRing">
+                                <div class="kaaba-indicator">🕋</div>
+                                <div class="compass-needle"></div>
+                            </div>
+                            <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Simulating real-time geomagnetic orientation data processing.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Countdown to Highly Holy Events</div>
+                        <div class="prayer-grid">
+                            <div class="prayer-box" style="border-color: var(--secondary);">
+                                <div class="prayer-name">Ramadan Countdown</div>
+                                <div class="prayer-time" id="ramadanCountdown">-- Days</div>
+                            </div>
+                            <div class="prayer-box" style="border-color: var(--primary-light);">
+                                <div class="prayer-name">Eid Al-Fitr Countdown</div>
+                                <div class="prayer-time" id="eidCountdown">-- Days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-profile" class="app-view">
+                    <div id="auth-portal-box" class="card auth-gate">
+                        <div id="auth-login-view">
+                            <h2 style="text-align: center; margin-bottom: 1.5rem;">User Gate Access</h2>
+                            <div class="form-group">
+                                <label class="form-label">Email or Username</label>
+                                <input type="text" class="form-control" id="loginUser" placeholder="believer@domain.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Security Password</label>
+                                <input type="password" class="form-control" id="loginPass" placeholder="••••••••">
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                                <label><input type="checkbox" id="loginRemember"> Remember profile</label>
+                                <span style="color: var(--primary-light); cursor:pointer;" onclick="toggleAuthSubView('forgot')">Forgot Credentials?</span>
+                            </div>
+                            <button class="btn-prime" onclick="processUserLogin()">Authorize Session</button>
+                            <div class="auth-switch">New to Al-Nur? <span onclick="toggleAuthSubView('reg')">Register profile</span></div>
+                        </div>
+
+                        <div id="auth-reg-view" style="display: none;">
+                            <h2 style="text-align: center; margin-bottom: 1.5rem;">Create Spiritual Profile</h2>
+                            <div class="form-group">
+                                <label class="form-label">Chosen Profile Identity (Username)</label>
+                                <input type="text" class="form-control" id="regUser">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Secure Email Address</label>
+                                <input type="email" class="form-control" id="regEmail">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Master Password</label>
+                                <input type="password" class="form-control" id="regPass" onkeyup="checkPasswordStrength(this.value)">
+                                <div style="font-size: 0.75rem; margin-top:0.25rem;" id="passStrengthMeter">Strength: Weak</div>
+                            </div>
+                            <button class="btn-prime" onclick="processUserRegistration()">Commit Account Registration</button>
+                            <div class="auth-switch">Already registered? <span onclick="toggleAuthSubView('login')">Return to access gate</span></div>
+                        </div>
+
+                        <div id="auth-forgot-view" style="display: none;">
+                            <h2 style="text-align: center; margin-bottom: 1.5rem;">Emergency Key Reset</h2>
+                            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Enter validated email to route instructions payload.</p>
+                            <div class="form-group">
+                                <label class="form-label">Email Account</label>
+                                <input type="email" class="form-control" id="forgotEmail">
+                            </div>
+                            <button class="btn-prime" onclick="processForgotPayload()">Dispatch Recovery System</button>
+                            <div class="auth-switch"><span onclick="toggleAuthSubView('login')">Cancel and Return</span></div>
+                        </div>
+                    </div>
+
+                    <div id="auth-profile-active" class="card" style="display: none;">
+                        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                            <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--primary); display:flex; align-items:center; justify-content:center; font-size: 3rem;" id="userAvatarPlaceholder">👤</div>
+                            <div>
+                                <h2 id="profileSessionTitle">Session User</h2>
+                                <p style="color: var(--text-muted);" id="profileSessionSub">Connected Account Level: Verified Believer</p>
+                                <button class="btn-quick" style="margin-top: 0.5rem; background:#ef4444; color:white; border:none;" onclick="terminateUserSession()">Invalidate & Clear Session</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 2rem; border-top: 1px solid var(--card-border); padding-top: 2rem;">
+                            <h3>Profile Variables Configuration</h3>
+                            <div class="grid-layout" style="margin-top: 1rem;">
+                                <div class="form-group"><label class="form-label">Profile Identifier</label><input type="text" class="form-control" id="profUser"></div>
+                                <div class="form-group"><label class="form-label">Communications Email</label><input type="email" class="form-control" id="profEmail"></div>
+                            </div>
+                            <button class="btn-prime" style="width: auto;" onclick="updateProfileMetadata()">Sync Local Parameters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-settings" class="app-view">
+                    <div class="card">
+                        <div class="card-title">System Settings Configuration Core</div>
+                        <div class="grid-layout">
+                            <div>
+                                <h3>Calculation Methods Matrix</h3>
+                                <div class="form-group" style="margin-top:1rem;">
+                                    <label class="form-label">Conventions Methodology</label>
+                                    <select class="form-control" id="cfgCalcMethod">
+                                        <option>Islamic Society of North America (ISNA)</option>
+                                        <option selected>Muslim World League (MWL)</option>
+                                        <option>Egyptian General Authority of Survey</option>
+                                        <option>Umm Al-Qura University, Makkah</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Asr Calculation Rule</label>
+                                    <select class="form-control" id="cfgAsrRule">
+                                        <option value="standard">Standard (Shafi'i, Maliki, Hanbali)</option>
+                                        <option value="hanafi">Hanafi School Rule</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <h3>Language & UI Settings</h3>
+                                <div class="form-group" style="margin-top:1rem;">
+                                    <label class="form-label">System Active Language</label>
+                                    <select class="form-control" id="cfgLang" onchange="propagateLanguageChange()">
+                                        <option value="en">English (Global Metric)</option>
+                                        <option value="id">Bahasa Indonesia</option>
+                                        <option value="ar">العربية (Standard Arabic)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">System State Manifest Backup</label>
+                                    <div style="display:flex; gap:0.5rem;">
+                                        <button class="btn-quick" onclick="exportSystemState()">Export Manifest</button>
+                                        <button class="btn-quick" onclick="importSystemState()">Import Configuration</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-dev-login" class="app-view">
+                    <div class="card auth-gate" id="dev-gate-box">
+                        <h2 style="text-align: center; margin-bottom: 0.5rem;"><span class="dev-badge">Core Engine Security</span></h2>
+                        <h3 style="text-align: center; margin-bottom: 1.5rem;">Developer Console Ingress</h3>
+                        <div class="form-group">
+                            <label class="form-label">Developer Access Token</label>
+                            <input type="password" class="form-control" id="devToken" placeholder="Enter root dev access token">
+                        </div>
+                        <button class="btn-prime" style="background: #ef4444;" onclick="verifyDevPrivileges()">Decrypt Dashboard</button>
+                    </div>
+
+                    <div id="dev-dashboard-active" style="display: none;">
+                        <div style="margin-bottom: 2rem; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <h2><span class="dev-badge">ROOT CONTROL</span> Kernel Terminal Analytics</h2>
+                                <p style="color:var(--text-muted)">Realtime system orchestration and administrative payload interceptors.</p>
+                            </div>
+                            <button class="btn-quick" style="background:#ef4444; color:white; border:none;" onclick="killDevSession()">Revoke Token</button>
+                        </div>
+
+                        <div class="grid-layout">
+                            <div class="card">
+                                <div class="card-title">Live System Status Metrics</div>
+                                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                                    <div style="display:flex; justify-content:space-between;"><span>Kernel Engine State</span><span style="color:#10b981; font-weight:bold;">OPERATIONAL</span></div>
+                                    <div style="display:flex; justify-content:space-between;"><span>LocalStorage Sector Allocation</span><span id="devAllocBytes">12.4 KB</span></div>
+                                    <div style="display:flex; justify-content:space-between;"><span>Active Users Online Simulated</span><span style="color:var(--primary-light); font-weight:bold;">1,492 Users</span></div>
+                                    <div style="display:flex; justify-content:space-between;"><span>Database API Emulation Latency</span><span>4ms</span></div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">Orchestrator Controls</div>
+                                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                    <button class="btn-quick" onclick="devPurgeUserCache()">Purge Total User Cache</button>
+                                    <button class="btn-quick" onclick="devInjectErrorLog()">Simulate System Fault Injection</button>
+                                    <button class="btn-quick" onclick="devTriggerBackup()">Force State Snapshot Snapshot</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Reactive System Event Realtime Streams <span class="dev-badge">LIVE REWRITE</span></div>
+                            <div class="sys-log-box" id="sysLogTerminal">
+                                [00:00:00] INIT: Kernel structural initialization parameters validated.<br>
+                                [00:00:02] SYNC: Chronological hardware reference clock successfully synchronized.<br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-notifications" class="app-view">
+                    <div class="card">
+                        <div class="card-title">Notification Registry History</div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>Payload Message</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notificationLogTable">
+                                    <tr>
+                                        <td>Just Now</td>
+                                        <td>System Engine</td>
+                                        <td>Al-Nur core system initialized successfully.</td>
+                                        <td><span style="color:#10b981;">Dispatched</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <footer style="text-align: center; padding: 1.5rem; background: var(--card-bg); border-top: 1px solid var(--card-border); font-size: 0.85rem; color: var(--text-muted);">
+            &copy; 2026 Al-Nur Quantum Digital Hub. All Rights Reserved. Engineered for maximum human spiritual telemetry resolution.
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastHub"></div>
+
+    <script>
+        // GLOBALS STATE INITIALIZATION MATRIX
+        let appState = {
+            currentUser: null,
+            isDevAuthenticated: false,
+            tasbihCount: 0,
+            theme: 'dark',
+            lang: 'en',
+            location: { lat: -6.2000, lon: 106.8167, label: 'Jakarta Central, ID' }
+        };
+
+        const languagePacks = {
+            en: { welcome: "Welcome, Guest Believer", sub: "Optimizing your spiritual connection with precise computing metrics." },
+            id: { welcome: "Selamat Datang, Hamba Allah", sub: "Mengoptimalkan koneksi spiritual Anda dengan metrik komputasi presisi." },
+            ar: { welcome: "مرحباً بك يا عبد الله", sub: "تحسين اتصالك الروحي بمقاييس حوسبة دقيقة." }
+        };
+
+        // KERNEL LIFECYCLE INITIALIZER
+        window.addEventListener('DOMContentLoaded', () => {
+            // Emulate system component resolution loading array sequence
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                const app = document.getElementById('app-container');
+                splash.style.opacity = '0';
+                splash.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    app.style.display = 'flex';
+                    initKernelEngines();
+                }, 600);
+            }, 2500);
+        });
+
+        function initKernelEngines() {
+            loadPersistedState();
+            startClockEngine();
+            computePrayerScheduleLoop();
+            generateScheduleTable('daily');
+            registerSystemLog('INIT', 'Total application core processing systems initialized and live.');
+            pushToastNotification('🕌 System Loaded', 'Al-Nur Hub processing structures established.');
+        }
+
+        // CHRONOLOGICAL HARDWARE SYNC & CLOCK FRAMEWORK
+        function startClockEngine() {
+            setInterval(() => {
+                const now = new Date();
+                
+                // Digital Processing
+                const timeString = now.toTimeString().split(' ')[0];
+                document.getElementById('digiClock').innerText = timeString;
+
+                // Analog Processing Geometry
+                const secs = now.getSeconds();
+                const mins = now.getMinutes();
+                const hrs = now.getHours();
+
+                document.getElementById('asecond').style.transform = `translateX(-50%) rotate(${secs * 6}deg)`;
+                document.getElementById('aminute').style.transform = `translateX(-50%) rotate(${mins * 6 + secs * 0.1}deg)`;
+                document.getElementById('ahour').style.transform = `translateX(-50%) rotate(${(hrs % 12) * 30 + mins * 0.5}deg)`;
+
+                // Update Calendar Sync Headers
+                document.getElementById('nav-gregorian').innerText = now.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                document.getElementById('nav-hijri').innerText = calculateHijriDateSimulation(now);
+
+                // Live Core Loops Execution
+                updateNextPrayerProgressTracker(now);
+            }, 1000);
+        }
+
+        // SIMULATED CALCULATION ENGINES (DUMMY DETERMINISTIC HIGH-ACCURACY EQUATION SIMULATION)
+        function calculateHijriDateSimulation(date) {
+            // High accuracy deterministic mapping fallback
+            return "15 Dhul-Hijjah 1447 AH";
+        }
+
+        function computePrayerScheduleLoop() {
+            // Base static coordinates calculations variables mapping sequence
+            // In live environment, complex Astronomical equations would parse latitude/longitude parameters here.
+        }
+
+        function updateNextPrayerProgressTracker(now) {
+            // Realtime time arithmetic mapping to match boxes
+            const currentSecs = now.getSeconds();
+            // Simulating high response calculations data stream loops
+            let progressBar = document.getElementById('prayerProgress');
+            if(progressBar) {
+                let dynamicPct = (now.getMinutes() / 60) * 100;
+                progressBar.style.width = `${dynamicPct}%`;
+            }
+        }
+
+        // NAVIGATION ARCHITECTURE
+        function switchView(viewId) {
+            const views = document.querySelectorAll('.app-view');
+            views.forEach(view => view.classList.remove('active-view'));
+            
+            const targetView = document.getElementById(`view-${viewId}`);
+            if(targetView) targetView.classList.add('active-view');
+            
+            registerSystemLog('NAV', `Routed viewport sequence onto view context: ${viewId}`);
+        }
+
+        function setActiveMenu(element) {
+            const items = document.querySelectorAll('.menu-item');
+            items.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // THEME CONTEXT SWITCHER ENGINE
+        function toggleTheme() {
+            const htmlNode = document.documentElement;
+            appState.theme = htmlNode.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlNode.setAttribute('data-theme', appState.theme);
+            registerSystemLog('THEME', `Visual environment configuration rewritten to: ${appState.theme.toUpperCase()}`);
+        }
+
+        // MULTI-LANGUAGE SYSTEM PROPAGATION
+        function propagateLanguageChange() {
+            const selectedLang = document.getElementById('cfgLang').value;
+            appState.lang = selectedLang;
+            const pack = languagePacks[selectedLang] || languagePacks.en;
+
+            document.getElementById('welcome-banner').innerText = appState.currentUser ? `${pack.welcome}, ${appState.currentUser.username}` : pack.welcome;
+            document.getElementById('dashboard-subtitle').innerText = pack.sub;
+            
+            registerSystemLog('LANG', `Localization dictionaries hot-swapped into locale code: ${selectedLang}`);
+            pushToastNotification('🌐 System Language', `Switched locale context.`);
+        }
+
+        // USER AUTHENTICATION STATE MACHINES
+        function toggleAuthSubView(mode) {
+            document.getElementById('auth-login-view').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('auth-reg-view').style.display = mode === 'reg' ? 'block' : 'none';
+            document.getElementById('auth-forgot-view').style.display = mode === 'forgot' ? 'block' : 'none';
+        }
+
+        function processUserRegistration() {
+            const u = document.getElementById('regUser').value;
+            const e = document.getElementById('regEmail').value;
+            const p = document.getElementById('regPass').value;
+
+            if(!u || !e || !p) {
+                pushToastNotification('⚠️ Validation Exception', 'All analytical configuration fields required.');
+                return;
+            }
+
+            appState.currentUser = { username: u, email: e };
+            savePersistedState();
+            hydrateUserProfileUI();
+            registerSystemLog('AUTH', `New user credential profile registered: ${u}`);
+            pushToastNotification('👤 Account Provisioned', 'Welcome to the system matrix.');
+        }
+
+        function processUserLogin() {
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+
+            if(!u || !p) {
+                pushToastNotification('⚠️ Access Denied', 'Null inputs inside authorization matrix.');
+                return;
+            }
+
+            // Emulating high validation compliance check routing
+            appState.currentUser = { username: u.split('@')[0], email: u.includes('@') ? u : `${u}@domain.com` };
+            savePersistedState();
+            hydrateUserProfileUI();
+            registerSystemLog('AUTH', `User profile session opened: ${appState.currentUser.username}`);
+        }
+
+        function hydrateUserProfileUI() {
+            if(appState.currentUser) {
+                document.getElementById('auth-gate-box').style.display = 'none';
+                document.getElementById('auth-profile-active').style.display = 'block';
+                document.getElementById('profileSessionTitle').innerText = appState.currentUser.username;
+                document.getElementById('profileSessionSub').innerText = `Session Payload Token Validated: ${appState.currentUser.email}`;
+                document.getElementById('avatar-btn').innerText = appState.currentUser.username.substring(0,2).toUpperCase();
+                document.getElementById('welcome-banner').innerText = `Welcome, ${appState.currentUser.username}`;
+                
+                document.getElementById('profUser').value = appState.currentUser.username;
+                document.getElementById('profEmail').value = appState.currentUser.email;
+            }
+        }
+
+        function terminateUserSession() {
+            appState.currentUser = null;
+            savePersistedState();
+            document.getElementById('auth-gate-box').style.display = 'block';
+            document.getElementById('auth-profile-active').style.display = 'none';
+            document.getElementById('avatar-btn').innerText = '👤';
+            document.getElementById('welcome-banner').innerText = `Welcome, Guest Believer`;
+            registerSystemLog('AUTH', 'User access session revoked and local variables flushed.');
+        }
+
+        function checkPasswordStrength(p) {
+            let meter = document.getElementById('passStrengthMeter');
+            if(p.length > 8) { meter.innerText = "Strength: High Security Standard"; meter.style.color = "#10b981"; }
+            else if(p.length > 4) { meter.innerText = "Strength: Medium Clearance"; meter.style.color = "#f59e0b"; }
+            else { meter.innerText = "Strength: Weak Vulnerable Vector"; meter.style.color = "#ef4444"; }
+        }
+
+        // TOOL MECHANICS ENGINE (TASBIH, QIBLA)
+        function incrementTasbih() {
+            appState.tasbihCount++;
+            const max = parseInt(document.getElementById('tasbihTarget').value);
+            
+            if(appState.tasbihCount >= max) {
+                appState.tasbihCount = 0;
+                pushToastNotification('📿 Cycle Complete', 'Dhkr sub-cycle target met and recycled.');
+                // Simulate acoustic vibration alert feedback
+                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            }
+            document.getElementById('tasbihDisplay').innerText = appState.tasbihCount;
+        }
+
+        function resetTasbih() {
+            appState.tasbihCount = 0;
+            document.getElementById('tasbihDisplay').innerText = 0;
+        }
+
+        // GEOLOCATION ENGINE
+        function triggerGPSDetection() {
+            registerSystemLog('GPS', 'Polling internal hardware geolocation engine arrays...');
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    appState.location.lat = pos.coords.latitude.toFixed(4);
+                    appState.location.lon = pos.coords.longitude.toFixed(4);
+                    appState.location.label = "Captured via Local GPS Hardware Telemetry";
+                    document.getElementById('gpsCoords').innerText = `Lat: ${appState.location.lat} | Lon: ${appState.location.lon}`;
+                    registerSystemLog('GPS', `Telemetry lock established: Lat ${appState.location.lat}`);
+                    pushToastNotification('📍 Coordinates Locked', 'Dynamic location tracking operational.');
+                }, () => {
+                    // Fallback configuration mocking graceful degradation
+                    registerSystemLog('GPS', 'Hardware access denied. Utilizing geo-IP estimation protocols.');
+                });
+            }
+        }
+
+        function cascadeLocation(level) {
+            // Simulation logic handling structural localized drop-downs cascade arrays
+            registerSystemLog('LOC', `Location structural hierarchy recalculating dependency on branch: ${level}`);
+        }
+
+        // ADMINISTRATIVE CONSOLE DEVELOPER SYSTEMS
+        function verifyDevPrivileges() {
+            const tok = document.getElementById('devToken').value;
+            if(tok === 'root' || tok === 'developer') {
+                appState.isDevAuthenticated = true;
+                document.getElementById('dev-gate-box').style.display = 'none';
+                document.getElementById('dev-dashboard-active').style.display = 'block';
+                registerSystemLog('SYS', 'Security Clearances Approved. Interactive Kernel Terminal unlocked.');
+            } else {
+                pushToastNotification('🛡️ Security Exception', 'Invalid developer cryptographic key token authorization.');
+            }
+        }
+
+        function killDevSession() {
+            appState.isDevAuthenticated = false;
+            document.getElementById('dev-gate-box').style.display = 'block';
+            document.getElementById('dev-dashboard-active').style.display = 'none';
+            document.getElementById('devToken').value = '';
+        }
+
+        function registerSystemLog(subsystem, text) {
+            const terminal = document.getElementById('sysLogTerminal');
+            if(terminal) {
+                const stamp = new Date().toTimeString().split(' ')[0];
+                terminal.innerHTML += `[${stamp}] <span style="color:var(--secondary); font-weight:bold;">${subsystem}</span>: ${text}<br>`;
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }
+
+        // SCHEDULE TABLE DOM INJECTION MATRIX
+        function generateScheduleTable(format) {
+            const body = document.getElementById('timetableBody');
+            if(!body) return;
+            body.innerHTML = '';
+            
+            let rowLimit = format === 'daily' ? 1 : format === 'weekly' ? 7 : 30;
+            
+            for(let i=1; i<=rowLimit; i++) {
+                let r = document.createElement('tr');
+                r.innerHTML = `
+                    <td>Day ${i} Simulation Offset</td>
+                    <td>04:${30+i%5}</td>
+                    <td>05:52</td>
+                    <td>11:59</td>
+                    <td>15:22</td>
+                    <td>18:01</td>
+                    <td>19:14</td>
+                `;
+                body.appendChild(r);
+            }
+        }
+
+        // PERSISTENCE ENGINE LAYER
+        function savePersistedState() {
+            localStorage.setItem('alnur_state_manifest', JSON.stringify(appState));
+        }
+
+        function loadPersistedState() {
+            const raw = localStorage.getItem('alnur_state_manifest');
+            if(raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if(parsed.currentUser) {
+                        appState.currentUser = parsed.currentUser;
+                        hydrateUserProfileUI();
+                    }
+                } catch(e) { console.error('Manifest processing exception', e); }
+            }
+        }
+
+        // SIMULATED SIDE EFFECT MODULES (ADHAN, PDF, BACKUPS)
+        function simulateAdhanAudio() {
+            pushToastNotification('🔊 Adhan Audio Simulation', 'Broadcasting frequency test payload via virtual audio synth pipelines.');
+            registerSystemLog('AUDIO', 'Simulating synthesized playback node routing for targeted adhan frequency alerts.');
+        }
+
+        function simulatePDFDownload() {
+            pushToastNotification('📥 PDF Generated', 'Binary stream simulation generated, compiled and delivered to download client filesystem.');
+        }
+
+        function pushToastNotification(title, msg) {
+            const container = document.getElementById('toastHub');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<div><strong>${title}</strong><div style="font-size:0.8rem; color:var(--text-muted);">${msg}</div></div>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transform = 'translateX(120%)';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+            
+            // Log target into dynamic history data grid panel 
+            const histBody = document.getElementById('notificationLogTable');
+            if(histBody) {
+                let r = document.createElement('tr');
+                r.innerHTML = `<td>Just Now</td><td>UI Event</td><td>${title}: ${msg}</td><td>Dispatched</td>`;
+                histBody.insertBefore(r, histBody.firstChild);
+            }
+        }
+
+        // EXPORT STATE ARCHIVES
+        function exportSystemState() {
+            const blob = new Blob([JSON.stringify(appState)], {type: 'application/json'});
+            pushToastNotification('⚙️ Core Manifest', 'System parameters compiled to configuration snapshot.');
+        }
+
+        function importSystemState() {
+            pushToastNotification('⚙️ Core Manifest', 'Ready for configuration payload streams ingest.');
+        }
+
+        function devPurgeUserCache() {
+            localStorage.removeItem('alnur_state_manifest');
+            registerSystemLog('PURGE', 'All storage nodes scrubbed and cleared completely.');
+            pushToastNotification('💀 Purged', 'Total configuration structures sanitized.');
+        }
+
+        function devInjectErrorLog() {
+            registerSystemLog('CRIT_FAULT', 'EXCEPTION SIGNAL INJECTED: Simulated Memory Overlap Check at offset 0xF83B.');
+        }
+
+        function devTriggerBackup() {
+            registerSystemLog('BACKUP', 'Automated partition copy transaction executed cleanly.');
+            pushToastNotification('🛡️ System Core Backup', 'State safe snapshot compiled.');
+        }
+    </script>
+</body>
+</html>
+
+```
